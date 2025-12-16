@@ -1,0 +1,31 @@
+# Build artifacts
+build/
+bin/
+outputs/
+*.o
+*.a
+*.so
+
+# Output files
+*.in
+*.png
+*.jpg
+*.gif
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Executables
+/FluidSimulator
+/ParticleViewer
+/Array3DTest
+/StaggeredGridTest
+
+# Temporary files
+*.tmp
+*.backup
