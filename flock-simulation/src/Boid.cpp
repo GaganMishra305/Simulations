@@ -15,6 +15,7 @@ const int window_width = desktopTemp.width;
 #define w_width window_width
 #define PI 3.141592635
 
+
 // =============================================== //
 // ======== Boid Functions from Boid.h =========== //
 // =============================================== //
@@ -52,10 +53,10 @@ void Boid::applyForce(const Pvector& force)
 
 // Separation
 // Keeps boids from getting too close to one another
-Pvector Boid::Separation(const vector<Boid>& boids)
+Pvector Boid::Separation(const vector<Boid>& boids, float radius)
 {
     // Distance of field of vision for separation between boids
-    float desiredseparation = 20;
+    float desiredseparation = radius;
     Pvector steer(0, 0);
     int count = 0;
     // For every boid in the system, check if it's too close
@@ -108,9 +109,9 @@ Pvector Boid::Separation(const vector<Boid>& boids)
 // Alignment
 // Calculates the average velocity of boids in the field of vision and
 // manipulates the velocity of the current boid in order to match it
-Pvector Boid::Alignment(const vector<Boid>& Boids)
+Pvector Boid::Alignment(const vector<Boid>& Boids, float radius)
 {
-    float neighbordist = 50; // Field of vision
+    float neighbordist = radius; // Field of vision
 
     Pvector sum(0, 0);
     int count = 0;
@@ -140,9 +141,9 @@ Pvector Boid::Alignment(const vector<Boid>& Boids)
 // Cohesion
 // Finds the average location of nearby boids and manipulates the
 // steering force to move in that direction.
-Pvector Boid::Cohesion(const vector<Boid>& Boids)
+Pvector Boid::Cohesion(const vector<Boid>& Boids, float radius)
 {
-    float neighbordist = 50;
+    float neighbordist = radius;
     Pvector sum(0, 0);
     int count = 0;
     for (int i = 0; i < Boids.size(); i++) {
@@ -194,21 +195,21 @@ void Boid::update()
 // Run flock() on the flock of boids.
 // This applies the three rules, modifies velocities accordingly, updates data,
 // and corrects boids which are sitting outside of the SFML window
-void Boid::run(const vector <Boid>& v)
+void Boid::run(const vector <Boid>& v, float radius)
 {
-    flock(v);
+    flock(v, radius);
     update();
     borders();
 }
 
 // Applies the three laws to the flock of boids
-void Boid::flock(const vector<Boid>& v)
+void Boid::flock(const vector<Boid>& v, float radius)
 {
-    Pvector sep = Separation(v);
-    Pvector ali = Alignment(v);
-    Pvector coh = Cohesion(v);
+    Pvector sep = Separation(v, radius);
+    Pvector ali = Alignment(v, radius);
+    Pvector coh = Cohesion(v, radius);
     // Arbitrarily weight these forces
-    sep.mulScalar(1.5);
+    sep.mulScalar(1.0);
     ali.mulScalar(1.0); // Might need to alter weights for different characteristics
     coh.mulScalar(1.0);
     // Add the force vectors to acceleration

@@ -1,0 +1,4 @@
+# any executables
+*.o
+*.out
+*.exe

@@ -5,10 +5,14 @@
 #include "Game.h"
 #include "SFML/Window.hpp"
 #include "SFML/Graphics.hpp"
+#include <random>
 
 // Construct window using SFML
-Game::Game()
-{
+Game::Game(int boidCount, float flockRadius, bool debug) : flock(flockRadius)
+{   
+    this->boidCount = boidCount;
+    this->flockRadius = flockRadius;
+    this->debugMode = debug;
     this->boidsSize = 3.0;
     this->frameCount = 0;
     this->fps = 0.0;
@@ -30,8 +34,17 @@ Game::Game()
 // input, and updates the view
 void Game::Run()
 {
-    for (int i = 0; i < 250; i++) {
-        Boid b(window_width / 3, window_height / 3); // Starts all boids in the center of the screen
+    // Initialize random number generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> disX(0, window_width);
+    std::uniform_real_distribution<> disY(0, window_height);
+
+    for (int i = 0; i < boidCount; i++) {
+        // Generate random position on screen
+        float randomX = disX(gen);
+        float randomY = disY(gen);
+        Boid b(randomX, randomY); // Starts boids at random positions on screen
         sf::CircleShape shape(8, 3);
 
         // Changing the Visual Properties of the shape
@@ -110,6 +123,16 @@ void Game::Render()
     // Draws all of the Boids out, and applies functions that are needed to update.
     for (int i = 0; i < shapes.size(); i++) {
         window.draw(shapes[i]);
+
+        // Draw flock radius circle for debugging
+        if(debugMode){
+            sf::CircleShape radiusCircle(flockRadius);
+            radiusCircle.setPosition(flock.getBoid(i).location.x - flockRadius, flock.getBoid(i).location.y - flockRadius);
+            radiusCircle.setFillColor(sf::Color::Transparent);
+            radiusCircle.setOutlineThickness(1);
+            radiusCircle.setOutlineColor(sf::Color(100, 100, 100, 100));
+            window.draw(radiusCircle);
+        }
 
         //cout << "Boid "<< i <<" Coordinates: (" << shapes[i].getPosition().x << ", " << shapes[i].getPosition().y << ")" << endl;
         //cout << "Boid Code " << i << " Location: (" << flock.getBoid(i).location.x << ", " << flock.getBoid(i).location.y << ")" << endl;

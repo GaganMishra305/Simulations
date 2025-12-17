@@ -42,14 +42,14 @@ public:
     Boid(float x, float y, bool predCheck);
     void applyForce(const Pvector& force);
     // Three Laws that boids follow
-    Pvector Separation(const vector<Boid>& Boids);
-    Pvector Alignment(const vector<Boid>& Boids);
-    Pvector Cohesion(const vector<Boid>& Boids);
+    Pvector Separation(const vector<Boid>& Boids, float radius);
+    Pvector Alignment(const vector<Boid>& Boids, float radius);
+    Pvector Cohesion(const vector<Boid>& Boids, float radius);
     //Functions involving SFML and visualisation linking
     Pvector seek(const Pvector& v);
-    void run(const vector<Boid>& v);
+    void run(const vector<Boid>& v, float radius);
     void update();
-    void flock(const vector<Boid>& v);
+    void flock(const vector<Boid>& v, float radius);
     void borders();
     float angle(const Pvector& v);
 };

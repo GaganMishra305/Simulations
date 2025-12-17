@@ -26,12 +26,15 @@ private:
     sf::Font font;
     int frameCount;
     float fps;
+    int boidCount;
+    float flockRadius;
+    bool debugMode;
 
     void Render();
     void HandleInput();
 
 public:
-    Game();
+    Game(int boidCount = 500, float flockRadius = 40.0, bool debug = false);
     void Run();
 };
 

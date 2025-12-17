@@ -14,7 +14,8 @@
 class Flock {
 public:
     //Constructors
-    Flock() {}
+    float radius;
+    Flock(float r) : radius(r) {}
     // Accessor functions
     int getSize();
     // Read/write methods.
