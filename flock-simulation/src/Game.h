@@ -29,12 +29,13 @@ private:
     int boidCount;
     float flockRadius;
     bool debugMode;
+    bool useTreeEngine;
 
     void Render();
     void HandleInput();
 
 public:
-    Game(int boidCount = 500, float flockRadius = 40.0, bool debug = false);
+    Game(int boidCount = 500, float flockRadius = 40.0, bool debug = false, bool useTree = false);
     void Run();
 };
 

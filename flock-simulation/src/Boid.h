@@ -48,8 +48,10 @@ public:
     //Functions involving SFML and visualisation linking
     Pvector seek(const Pvector& v);
     void run(const vector<Boid>& v, float radius);
+    void runNeighbors(const std::vector<const Boid*>& neighbors, float radius);
     void update();
     void flock(const vector<Boid>& v, float radius);
+    void flockNeighbors(const std::vector<const Boid*>& neighbors, float radius);
     void borders();
     float angle(const Pvector& v);
 };

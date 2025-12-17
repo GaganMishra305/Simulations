@@ -25,8 +25,8 @@ Boid::Boid(float x, float y)
     acceleration = Pvector(0, 0);
     velocity = Pvector(rand()%3 - 2, rand()%3 - 2);
     location = Pvector(x, y);
-    maxSpeed = 3.5;
-    maxForce = 0.5;
+    maxSpeed = 7.5;
+    maxForce = 0.75;
 }
 
 Boid::Boid(float x, float y, bool predCheck)
@@ -34,11 +34,11 @@ Boid::Boid(float x, float y, bool predCheck)
     predator = predCheck;
     if (predCheck == true) {
         maxSpeed = 7.5;
-        maxForce = 0.5;
+        maxForce = 0.75;
         velocity = Pvector(rand()%3 - 1, rand()%3 - 1);
     } else {
-        maxSpeed = 3.5;
-        maxForce = 0.5;
+        maxSpeed = 7.5;
+        maxForce = 0.75;
         velocity = Pvector(rand()%3 - 2, rand()%3 - 2);
     }
     acceleration = Pvector(0, 0);
@@ -202,6 +202,13 @@ void Boid::run(const vector <Boid>& v, float radius)
     borders();
 }
 
+void Boid::runNeighbors(const std::vector<const Boid*>& neighbors, float radius)
+{
+    flockNeighbors(neighbors, radius);
+    update();
+    borders();
+}
+
 // Applies the three laws to the flock of boids
 void Boid::flock(const vector<Boid>& v, float radius)
 {
@@ -209,10 +216,97 @@ void Boid::flock(const vector<Boid>& v, float radius)
     Pvector ali = Alignment(v, radius);
     Pvector coh = Cohesion(v, radius);
     // Arbitrarily weight these forces
-    sep.mulScalar(1.0);
+    sep.mulScalar(1.25);
     ali.mulScalar(1.0); // Might need to alter weights for different characteristics
     coh.mulScalar(1.0);
     // Add the force vectors to acceleration
+    applyForce(sep);
+    applyForce(ali);
+    applyForce(coh);
+}
+
+void Boid::flockNeighbors(const std::vector<const Boid*>& neighbors, float radius)
+{
+    // Compute forces using only neighbors
+    float desiredSep = radius;
+    float neighbordist = radius;
+
+    // Separation
+    Pvector sep(0,0);
+    int sepCount = 0;
+    for (auto* b : neighbors) {
+        float d = location.distance(b->location);
+        if ((d > 0) && (d < desiredSep)) {
+            Pvector diff(0,0);
+            diff = diff.subTwoVector(location, b->location);
+            diff.normalize();
+            diff.divScalar(d);
+            sep.addVector(diff);
+            sepCount++;
+        }
+        if ((d > 0) && (d < desiredSep) && predator && b->predator) {
+            Pvector pred2pred(0, 0);
+            pred2pred = pred2pred.subTwoVector(location, b->location);
+            pred2pred.normalize();
+            pred2pred.divScalar(d);
+            sep.addVector(pred2pred);
+            sepCount++;
+        } else if ((d > 0) && (d < desiredSep+70) && b->predator) {
+            Pvector pred(0, 0);
+            pred = pred.subTwoVector(location, b->location);
+            pred.mulScalar(900);
+            sep.addVector(pred);
+            sepCount++;
+        }
+    }
+    if (sepCount > 0) sep.divScalar((float)sepCount);
+    if (sep.magnitude() > 0) {
+        sep.normalize();
+        sep.mulScalar(maxSpeed);
+        sep.subVector(velocity);
+        sep.limit(maxForce);
+    }
+
+    // Alignment
+    Pvector aliSum(0,0);
+    int aliCount = 0;
+    for (auto* b : neighbors) {
+        float d = location.distance(b->location);
+        if ((d > 0) && (d < neighbordist)) {
+            aliSum.addVector(b->velocity);
+            aliCount++;
+        }
+    }
+    Pvector ali(0,0);
+    if (aliCount > 0) {
+        aliSum.divScalar((float)aliCount);
+        aliSum.normalize();
+        aliSum.mulScalar(maxSpeed);
+        ali = ali.subTwoVector(aliSum, velocity);
+        ali.limit(maxForce);
+    }
+
+    // Cohesion
+    Pvector cohSum(0,0);
+    int cohCount = 0;
+    for (auto* b : neighbors) {
+        float d = location.distance(b->location);
+        if ((d > 0) && (d < neighbordist)) {
+            cohSum.addVector(b->location);
+            cohCount++;
+        }
+    }
+    Pvector coh(0,0);
+    if (cohCount > 0) {
+        cohSum.divScalar((float)cohCount);
+        coh = seek(cohSum);
+    }
+
+    // Weights
+    sep.mulScalar(1.25);
+    ali.mulScalar(1.0);
+    coh.mulScalar(1.0);
+
     applyForce(sep);
     applyForce(ali);
     applyForce(coh);
@@ -224,8 +318,8 @@ void Boid::borders()
 {
     if (location.x < 0)    location.x += w_width;
     if (location.y < 0)    location.y += w_height;
-    if (location.x > 1000) location.x -= w_width;
-    if (location.y > 1000) location.y -= w_height;
+    if (location.x > w_width)  location.x -= w_width;
+    if (location.y > w_height) location.y -= w_height;
 }
 
 // Calculates the angle for the velocity of a boid which allows the visual

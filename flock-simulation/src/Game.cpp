@@ -7,12 +7,50 @@
 #include "SFML/Graphics.hpp"
 #include <random>
 
+// Map HSV color to RGB for smooth speed-based coloring
+static sf::Color hsvToRgb(float h, float s, float v)
+{
+    while (h < 0) h += 360.f;
+    while (h >= 360.f) h -= 360.f;
+    s = std::max(0.f, std::min(1.f, s));
+    v = std::max(0.f, std::min(1.f, v));
+
+    float c = v * s;
+    float x = c * (1.f - std::fabs(fmod(h / 60.f, 2.f) - 1.f));
+    float m = v - c;
+
+    float r1, g1, b1;
+    if (h < 60)      { r1 = c; g1 = x; b1 = 0; }
+    else if (h < 120){ r1 = x; g1 = c; b1 = 0; }
+    else if (h < 180){ r1 = 0; g1 = c; b1 = x; }
+    else if (h < 240){ r1 = 0; g1 = x; b1 = c; }
+    else if (h < 300){ r1 = x; g1 = 0; b1 = c; }
+    else             { r1 = c; g1 = 0; b1 = x; }
+
+    sf::Uint8 R = static_cast<sf::Uint8>((r1 + m) * 255.f);
+    sf::Uint8 G = static_cast<sf::Uint8>((g1 + m) * 255.f);
+    sf::Uint8 B = static_cast<sf::Uint8>((b1 + m) * 255.f);
+    return sf::Color(R, G, B);
+}
+
+static sf::Color colorFromVelocity(const Boid& b)
+{
+    // Normalize speed to [0,1] using boid's maxSpeed
+    float speed = std::sqrt(b.velocity.x * b.velocity.x + b.velocity.y * b.velocity.y);
+    float t = 0.f;
+    if (b.maxSpeed > 0) t = std::min(1.f, std::max(0.f, speed / b.maxSpeed));
+    // Hue from 220 (blue) at slow to 0 (red) at fast
+    float hue = (1.f - t) * 220.f;
+    return hsvToRgb(hue, 1.f, 1.f);
+}
+
 // Construct window using SFML
-Game::Game(int boidCount, float flockRadius, bool debug) : flock(flockRadius)
+Game::Game(int boidCount, float flockRadius, bool debug, bool useTree) : flock(flockRadius)
 {   
     this->boidCount = boidCount;
     this->flockRadius = flockRadius;
     this->debugMode = debug;
+    this->useTreeEngine = useTree;
     this->boidsSize = 3.0;
     this->frameCount = 0;
     this->fps = 0.0;
@@ -28,6 +66,10 @@ Game::Game(int boidCount, float flockRadius, bool debug) : flock(flockRadius)
     if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")) {
         std::cerr << "Warning: Could not load font. Text will not be displayed." << std::endl;
     }
+
+    // Configure flock engine and bounds
+    flock.setBounds(window_width, window_height);
+    flock.setUseTree(useTreeEngine);
 }
 
 // Run the simulation. Run creates the boids that we'll display, checks for user
@@ -143,6 +185,9 @@ void Game::Render()
         // Calculates the angle where the velocity is pointing so that the triangle turns towards it.
         float theta = flock.getBoid(i).angle(flock.getBoid(i).velocity);
         shapes[i].setRotation(theta);
+
+        // Color based on velocity magnitude for visual appeal
+        shapes[i].setFillColor(colorFromVelocity(flock.getBoid(i)));
 
         // Prevent boids from moving off the screen through wrapping
         // If boid exits right boundary

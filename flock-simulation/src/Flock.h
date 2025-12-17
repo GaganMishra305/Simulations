@@ -23,8 +23,13 @@ public:
     // Mutator Functions
     void addBoid(const Boid& b);
     void flocking();
+    void setBounds(int w, int h) { width = w; height = h; }
+    void setUseTree(bool v) { useTree = v; }
 private:
     vector<Boid> flock;
+    bool useTree = false;
+    int width = 1920;
+    int height = 1080;
 };
 
 #endif
