@@ -4,10 +4,10 @@
 
 int main(int argc, char* argv[])
 {
-    int boidCount = 500;
-    float flockRadius = 40.0f;
+    int boidCount = 3000;
+    float flockRadius = 30.0f;
     bool debug = false;
-    bool useTree = false;
+    bool useTree = true;
 
     // Parse command line arguments
     for (int i = 1; i < argc; i++) {
@@ -30,10 +30,10 @@ int main(int argc, char* argv[])
         } else if (arg == "--help") {
             std::cout << "Usage: boids-sim [options]\n"
                       << "Options:\n"
-                      << "  --boids <count>      Number of boids (default: 500)\n"
-                      << "  --radius <float>     Flock interaction radius (default: 40.0)\n"
+                      << "  --boids <count>      Number of boids (default: 3000)\n"
+                      << "  --radius <float>     Flock interaction radius (default: 30.0)\n"
                       << "  --debug <true|false> Enable debug mode (default: false)\n"
-                      << "  --engine <basic|tree>Choose naive or quadtree engine (default: basic)\n"
+                      << "  --engine <basic|tree>Choose naive or quadtree engine (default: tree)\n"
                       << "  --help               Show this help message\n";
             return 0;
         }

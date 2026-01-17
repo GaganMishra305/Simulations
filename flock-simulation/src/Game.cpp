@@ -79,19 +79,24 @@ void Game::Run()
     // Initialize random number generator
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> disX(0, window_width);
-    std::uniform_real_distribution<> disY(0, window_height);
+    // Spawn boids uniformly inside a small circle around screen center
+    const float centerX = window_width * 0.5f;
+    const float centerY = window_height * 0.5f;
+    const float spawnRadius = 250; // 200 spwan radius for reducing the jitter at start
+    std::uniform_real_distribution<float> angleDist(0.f, 2.f * 3.14159265f);
+    std::uniform_real_distribution<float> unitDist(0.f, 1.f);
 
     for (int i = 0; i < boidCount; i++) {
-        // Generate random position on screen
-        float randomX = disX(gen);
-        float randomY = disY(gen);
+        // Generate random position uniformly within circle
+        float angle = angleDist(gen);
+        float r = spawnRadius * std::sqrt(unitDist(gen));
+        float randomX = centerX + r * std::cos(angle);
+        float randomY = centerY + r * std::sin(angle);
         Boid b(randomX, randomY); // Starts boids at random positions on screen
         sf::CircleShape shape(8, 3);
 
         // Changing the Visual Properties of the shape
-        // shape.setPosition(b.location.x, b.location.y); // Sets position of shape to random location that boid was set to.
-        shape.setPosition(window_width, window_height); // Testing purposes, starts all shapes in the center of screen.
+        shape.setPosition(b.location.x, b.location.y); // Match shape to initial boid location
         shape.setOutlineColor(sf::Color(0,255,0));
         shape.setFillColor(sf::Color::Green);
         shape.setOutlineColor(sf::Color::White);
