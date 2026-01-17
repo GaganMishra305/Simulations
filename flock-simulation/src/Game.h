@@ -31,8 +31,20 @@ private:
     bool debugMode;
     bool useTreeEngine;
 
+    // Weights for flocking behaviors
+    float sepWeight = 1.0f;
+    float aliWeight = 1.0f;
+    float cohWeight = 1.0f;
+
+    // Slider interaction
+    bool draggingSepSlider = false;
+    bool draggingAliSlider = false;
+    bool draggingCohSlider = false;
+
     void Render();
     void HandleInput();
+    void renderSliders();
+    void handleSliderInteraction(sf::Vector2i mousePos, bool mousePressed);
 
 public:
     Game(int boidCount = 500, float flockRadius = 40.0, bool debug = false, bool useTree = false);

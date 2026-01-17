@@ -47,11 +47,11 @@ public:
     Pvector Cohesion(const vector<Boid>& Boids, float radius);
     //Functions involving SFML and visualisation linking
     Pvector seek(const Pvector& v);
-    void run(const vector<Boid>& v, float radius);
-    void runNeighbors(const std::vector<const Boid*>& neighbors, float radius);
+    void run(const vector<Boid>& v, float radius, float sepW = 1.0f, float aliW = 1.0f, float cohW = 1.0f);
+    void runNeighbors(const std::vector<const Boid*>& neighbors, float radius, float sepW = 1.0f, float aliW = 1.0f, float cohW = 1.0f);
     void update();
-    void flock(const vector<Boid>& v, float radius);
-    void flockNeighbors(const std::vector<const Boid*>& neighbors, float radius);
+    void flock(const vector<Boid>& v, float radius, float sepW = 1.0f, float aliW = 1.0f, float cohW = 1.0f);
+    void flockNeighbors(const std::vector<const Boid*>& neighbors, float radius, float sepW = 1.0f, float aliW = 1.0f, float cohW = 1.0f);
     void borders();
     float angle(const Pvector& v);
 };

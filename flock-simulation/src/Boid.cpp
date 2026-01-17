@@ -195,37 +195,37 @@ void Boid::update()
 // Run flock() on the flock of boids.
 // This applies the three rules, modifies velocities accordingly, updates data,
 // and corrects boids which are sitting outside of the SFML window
-void Boid::run(const vector <Boid>& v, float radius)
+void Boid::run(const vector <Boid>& v, float radius, float sepW, float aliW, float cohW)
 {
-    flock(v, radius);
+    flock(v, radius, sepW, aliW, cohW);
     update();
     borders();
 }
 
-void Boid::runNeighbors(const std::vector<const Boid*>& neighbors, float radius)
+void Boid::runNeighbors(const std::vector<const Boid*>& neighbors, float radius, float sepW, float aliW, float cohW)
 {
-    flockNeighbors(neighbors, radius);
+    flockNeighbors(neighbors, radius, sepW, aliW, cohW);
     update();
     borders();
 }
 
 // Applies the three laws to the flock of boids
-void Boid::flock(const vector<Boid>& v, float radius)
+void Boid::flock(const vector<Boid>& v, float radius, float sepW, float aliW, float cohW)
 {
     Pvector sep = Separation(v, radius);
     Pvector ali = Alignment(v, radius);
     Pvector coh = Cohesion(v, radius);
-    // Arbitrarily weight these forces
-    sep.mulScalar(1.25);
-    ali.mulScalar(1.0); // Might need to alter weights for different characteristics
-    coh.mulScalar(1.0);
+    // Weight these forces with dynamic values
+    sep.mulScalar(sepW);
+    ali.mulScalar(aliW);
+    coh.mulScalar(cohW);
     // Add the force vectors to acceleration
     applyForce(sep);
     applyForce(ali);
     applyForce(coh);
 }
 
-void Boid::flockNeighbors(const std::vector<const Boid*>& neighbors, float radius)
+void Boid::flockNeighbors(const std::vector<const Boid*>& neighbors, float radius, float sepW, float aliW, float cohW)
 {
     // Compute forces using only neighbors
     float desiredSep = radius;
@@ -303,9 +303,9 @@ void Boid::flockNeighbors(const std::vector<const Boid*>& neighbors, float radiu
     }
 
     // Weights
-    sep.mulScalar(1.25);
-    ali.mulScalar(1.0);
-    coh.mulScalar(1.0);
+    sep.mulScalar(sepW);
+    ali.mulScalar(aliW);
+    coh.mulScalar(cohW);
 
     applyForce(sep);
     applyForce(ali);

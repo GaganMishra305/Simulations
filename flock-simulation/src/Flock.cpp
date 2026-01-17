@@ -28,7 +28,7 @@ void Flock::flocking()
 {
     if (!useTree) {
         for (int i = 0; i < (int)flock.size(); i++) {
-            flock[i].run(flock, radius);
+            flock[i].run(flock, radius, sepWeight, aliWeight, cohWeight);
         }
         return;
     }
@@ -53,6 +53,6 @@ void Flock::flocking()
             if (idx == i) continue; // skip self
             neighbors.push_back(&flock[idx]);
         }
-        flock[i].runNeighbors(neighbors, radius);
+        flock[i].runNeighbors(neighbors, radius, sepWeight, aliWeight, cohWeight);
     }
 }

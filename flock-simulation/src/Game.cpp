@@ -7,6 +7,7 @@
 #include "SFML/Graphics.hpp"
 #include <random>
 
+const int slideroffset = 1000;
 // Map HSV color to RGB for smooth speed-based coloring
 static sf::Color hsvToRgb(float h, float s, float v)
 {
@@ -70,6 +71,7 @@ Game::Game(int boidCount, float flockRadius, bool debug, bool useTree) : flock(f
     // Configure flock engine and bounds
     flock.setBounds(window_width, window_height);
     flock.setUseTree(useTreeEngine);
+    flock.setWeights(sepWeight, aliWeight, cohWeight);
 }
 
 // Run the simulation. Run creates the boids that we'll display, checks for user
@@ -131,27 +133,38 @@ void Game::HandleInput()
         }
     }
 
+    // Handle slider interaction
+    sf::Vector2i mouseCoords = sf::Mouse::getPosition(window);
+    bool mousePressed = sf::Mouse::isButtonPressed(sf::Mouse::Left);
+    handleSliderInteraction(mouseCoords, mousePressed);
+
     // Check for mouse click, draws and adds boid to flock if so.
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        // Gets mouse coordinates, sets that as the location of the boid and the shape
-        sf::Vector2i mouseCoords = sf::Mouse::getPosition(window);
-        Boid b(mouseCoords.x, mouseCoords.y, false);
-        sf::CircleShape shape(10,3);
+    if (mousePressed) {
+        // Only add boid if not interacting with sliders
+        if (!draggingSepSlider && !draggingAliSlider && !draggingCohSlider) {
+            Boid b(mouseCoords.x, mouseCoords.y, false);
+            sf::CircleShape shape(10,3);
 
-        // Changing visual properties of newly created boid
-        shape.setPosition(mouseCoords.x, mouseCoords.y);
-        shape.setOutlineColor(sf::Color(255, 0, 0));
-        shape.setFillColor(sf::Color(255, 0, 0));
-        shape.setOutlineColor(sf::Color::White);
-        shape.setOutlineThickness(1);
-        shape.setRadius(boidsSize);
+            // Changing visual properties of newly created boid
+            shape.setPosition(mouseCoords.x, mouseCoords.y);
+            shape.setOutlineColor(sf::Color(255, 0, 0));
+            shape.setFillColor(sf::Color(255, 0, 0));
+            shape.setOutlineColor(sf::Color::White);
+            shape.setOutlineThickness(1);
+            shape.setRadius(boidsSize);
 
-        // Adds newly created boid and shape to their respective data structure
-        flock.addBoid(b);
-        shapes.push_back(shape);
+            // Adds newly created boid and shape to their respective data structure
+            flock.addBoid(b);
+            shapes.push_back(shape);
 
-        // New Shape is drawn
-        window.draw(shapes[shapes.size()-1]);
+            // New Shape is drawn
+            window.draw(shapes[shapes.size()-1]);
+        }
+    } else {
+        // Reset dragging flags when mouse is released
+        draggingSepSlider = false;
+        draggingAliSlider = false;
+        draggingCohSlider = false;
     }
 }
 
@@ -228,5 +241,131 @@ void Game::Render()
     flockSizeText.setFillColor(sf::Color::White);
     flockSizeText.setPosition(10, 40);
     window.draw(flockSizeText);
+
+    // Render sliders
+    renderSliders();
+    flock.setWeights(sepWeight, aliWeight, cohWeight);
     window.display();
+}
+
+void Game::renderSliders()
+{
+    int sliderY = window_height - slideroffset;
+    int sliderX = 50;
+    int sliderWidth = 200;
+    int sliderHeight = 10;
+    int spacing = 80;
+
+    // Slider background boxes
+    sf::RectangleShape sepSliderBg(sf::Vector2f(sliderWidth, sliderHeight));
+    sf::RectangleShape aliSliderBg(sf::Vector2f(sliderWidth, sliderHeight));
+    sf::RectangleShape cohSliderBg(sf::Vector2f(sliderWidth, sliderHeight));
+
+    sepSliderBg.setPosition(sliderX, sliderY);
+    aliSliderBg.setPosition(sliderX, sliderY + spacing);
+    cohSliderBg.setPosition(sliderX, sliderY + spacing * 2);
+
+    sepSliderBg.setFillColor(sf::Color(50, 50, 50));
+    aliSliderBg.setFillColor(sf::Color(50, 50, 50));
+    cohSliderBg.setFillColor(sf::Color(50, 50, 50));
+
+    window.draw(sepSliderBg);
+    window.draw(aliSliderBg);
+    window.draw(cohSliderBg);
+
+    // Slider handles (circles)
+    float sepHandleX = sliderX + (sepWeight / 3.0f) * sliderWidth; // Assume max weight is 3.0
+    float aliHandleX = sliderX + (aliWeight / 3.0f) * sliderWidth;
+    float cohHandleX = sliderX + (cohWeight / 3.0f) * sliderWidth;
+
+    sf::CircleShape sepHandle(10);
+    sf::CircleShape aliHandle(10);
+    sf::CircleShape cohHandle(10);
+
+    sepHandle.setPosition(sepHandleX - 10, sliderY - 5);
+    aliHandle.setPosition(aliHandleX - 10, sliderY + spacing - 5);
+    cohHandle.setPosition(cohHandleX - 10, sliderY + spacing * 2 - 5);
+
+    sepHandle.setFillColor(sf::Color::Red);
+    aliHandle.setFillColor(sf::Color::Green);
+    cohHandle.setFillColor(sf::Color::Blue);
+
+    window.draw(sepHandle);
+    window.draw(aliHandle);
+    window.draw(cohHandle);
+
+    // Labels
+    sf::Text sepLabel;
+    sepLabel.setFont(font);
+    sepLabel.setString("Sep: " + std::to_string(sepWeight).substr(0, 4));
+    sepLabel.setCharacterSize(16);
+    sepLabel.setFillColor(sf::Color::White);
+    sepLabel.setPosition(sliderX + sliderWidth + 20, sliderY);
+    window.draw(sepLabel);
+
+    sf::Text aliLabel;
+    aliLabel.setFont(font);
+    aliLabel.setString("Ali: " + std::to_string(aliWeight).substr(0, 4));
+    aliLabel.setCharacterSize(16);
+    aliLabel.setFillColor(sf::Color::White);
+    aliLabel.setPosition(sliderX + sliderWidth + 20, sliderY + spacing);
+    window.draw(aliLabel);
+
+    sf::Text cohLabel;
+    cohLabel.setFont(font);
+    cohLabel.setString("Coh: " + std::to_string(cohWeight).substr(0, 4));
+    cohLabel.setCharacterSize(16);
+    cohLabel.setFillColor(sf::Color::White);
+    cohLabel.setPosition(sliderX + sliderWidth + 20, sliderY + spacing * 2);
+    window.draw(cohLabel);
+}
+
+void Game::handleSliderInteraction(sf::Vector2i mousePos, bool mousePressed)
+{
+    int sliderY = window_height - slideroffset;
+    int sliderX = 50;
+    int sliderWidth = 200;
+    int sliderHeight = 10;
+    int spacing = 80;
+
+    // Check if mouse is near separation slider
+    if (mousePos.y >= sliderY - 15 && mousePos.y <= sliderY + sliderHeight + 15) {
+        if (mousePressed && mousePos.x >= sliderX && mousePos.x <= sliderX + sliderWidth) {
+            draggingSepSlider = true;
+            sepWeight = ((float)(mousePos.x - sliderX) / sliderWidth) * 3.0f;
+            sepWeight = std::max(0.0f, std::min(3.0f, sepWeight));
+        }
+    }
+
+    // Check if mouse is near alignment slider
+    if (mousePos.y >= sliderY + spacing - 15 && mousePos.y <= sliderY + spacing + sliderHeight + 15) {
+        if (mousePressed && mousePos.x >= sliderX && mousePos.x <= sliderX + sliderWidth) {
+            draggingAliSlider = true;
+            aliWeight = ((float)(mousePos.x - sliderX) / sliderWidth) * 3.0f;
+            aliWeight = std::max(0.0f, std::min(3.0f, aliWeight));
+        }
+    }
+
+    // Check if mouse is near cohesion slider
+    if (mousePos.y >= sliderY + spacing * 2 - 15 && mousePos.y <= sliderY + spacing * 2 + sliderHeight + 15) {
+        if (mousePressed && mousePos.x >= sliderX && mousePos.x <= sliderX + sliderWidth) {
+            draggingCohSlider = true;
+            cohWeight = ((float)(mousePos.x - sliderX) / sliderWidth) * 3.0f;
+            cohWeight = std::max(0.0f, std::min(3.0f, cohWeight));
+        }
+    }
+
+    // Continue dragging if already dragging
+    if (draggingSepSlider && mousePressed) {
+        sepWeight = ((float)(mousePos.x - sliderX) / sliderWidth) * 3.0f;
+        sepWeight = std::max(0.0f, std::min(3.0f, sepWeight));
+    }
+    if (draggingAliSlider && mousePressed) {
+        aliWeight = ((float)(mousePos.x - sliderX) / sliderWidth) * 3.0f;
+        aliWeight = std::max(0.0f, std::min(3.0f, aliWeight));
+    }
+    if (draggingCohSlider && mousePressed) {
+        cohWeight = ((float)(mousePos.x - sliderX) / sliderWidth) * 3.0f;
+        cohWeight = std::max(0.0f, std::min(3.0f, cohWeight));
+    }
 }
